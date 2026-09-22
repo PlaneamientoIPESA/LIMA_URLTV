@@ -7,6 +7,11 @@
 
 <body style="margin:0; background:black; overflow:hidden;">
 
+<!-- VIDEO INVISIBLE DE FONDO: Engaña a la TV LG para que no se apague a los 30 min -->
+<video id="videoAntiApagado" loop muted playsinline style="position:absolute; width:1px; height:1px; opacity:0.01; pointer-events:none;">
+  <source src="https://raw.githubusercontent.com/bower-media-samples/big-buck-bunny-1080p-60fps-30s/master/video.mp4" type="video/mp4">
+</video>
+
 <div id="contenedor" style="width:100%; height:100vh;"></div>
 
 <script>
@@ -52,34 +57,23 @@ function rotar() {
 }
 
 rotar();
-setInterval(rotar, 25000);
+setInterval(rotar, 5000);
 
-/* ===== SISTEMA ANTI-REPOSO REAL (Screen Wake Lock API) ===== */
-let wakeLock = null;
+/* ===== ACTIVAR VIDEO ANTI-APAGADO ===== */
+const video = document.getElementById("videoAntiApagado");
 
-async function solicitarWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      console.log('Pantalla bloqueada para evitar reposo.');
-    }
-  } catch (err) {
-    console.log(`Error al activar Wake Lock: ${err.name}, ${err.message}`);
+function encenderVideo() {
+  if (video) {
+    video.play().catch(() => {});
   }
 }
 
-// 1. Activar al cargar la página
-solicitarWakeLock();
+// Iniciar video automáticamente
+encenderVideo();
 
-// 2. Volver a activar si la pestaña vuelve a enfocarse o se minimiza/restaura
-document.addEventListener('visibilitychange', async () => {
-  if (wakeLock !== null && document.visibilityState === 'visible') {
-    await solicitarWakeLock();
-  }
-});
-
-// 3. Activar si el usuario hace clic o toca la pantalla una vez
-document.addEventListener('click', solicitarWakeLock);
+// Si la TV exige una interacción, se activa al tocar o hacer clic en la pantalla
+document.addEventListener("click", encenderVideo);
+document.addEventListener("touchstart", encenderVideo);
 
 </script>
 
