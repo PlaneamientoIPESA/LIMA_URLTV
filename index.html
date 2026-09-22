@@ -9,11 +9,6 @@
 
 <div id="contenedor" style="width:100%; height:100vh;"></div>
 
-<!-- Punto invisible anti-reposo -->
-<div id="antiReposo" 
-     style="position:absolute; width:2px; height:2px; background:black; top:0; left:0;">
-</div>
-
 <script>
 
 let rotador = [
@@ -31,11 +26,9 @@ let rotador = [
   { titulo: "FLYER JP", src: "FLYER_JP.jpeg" },
   { titulo: "REGLAS ASESOR DE SERVICIOS", src: "300126_IPESA_CUADRO Reglas Asesor de Servicios (1)_page-0001.jpg" },
 
-
   { titulo: "TÉCNICO JUlIO", src: "Técnico-JUL.png" },
   { titulo: "DESCUENTOS", src: "DESCUENTOS.jpeg" },
   { titulo: "ESPECIALISTAS", src: "ESPECIALISTAS.jpeg" },
-  
 ];
 
 let i = 0;
@@ -61,14 +54,32 @@ function rotar() {
 rotar();
 setInterval(rotar, 25000);
 
-/* ===== SISTEMA ANTI REPOSO ===== */
-let mover = 0;
+/* ===== SISTEMA ANTI-REPOSO REAL (Screen Wake Lock API) ===== */
+let wakeLock = null;
 
-setInterval(() => {
-  const anti = document.getElementById("antiReposo");
-  mover = (mover + 1) % 2;
-  anti.style.transform = `translateX(${mover}px)`;
-}, 10000);
+async function solicitarWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Pantalla bloqueada para evitar reposo.');
+    }
+  } catch (err) {
+    console.log(`Error al activar Wake Lock: ${err.name}, ${err.message}`);
+  }
+}
+
+// 1. Activar al cargar la página
+solicitarWakeLock();
+
+// 2. Volver a activar si la pestaña vuelve a enfocarse o se minimiza/restaura
+document.addEventListener('visibilitychange', async () => {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    await solicitarWakeLock();
+  }
+});
+
+// 3. Activar si el usuario hace clic o toca la pantalla una vez
+document.addEventListener('click', solicitarWakeLock);
 
 </script>
 
